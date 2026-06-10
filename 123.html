@@ -2,602 +2,463 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Autodesk 备份代码中心 | 安全验证门户</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小说数据大屏</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts-wordcloud@2.1.0/dist/echarts-wordcloud.min.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            background: radial-gradient(circle at 10% 20%, #0a0f1e, #03060c);
-            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+            font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f4e 50%, #0d1137 100%);
+            color: #e0e6ff;
             min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 1.5rem;
-            color: #edf2ff;
+            overflow-x: hidden;
         }
-
-        /* 玻璃卡片效果 */
-        .glass-card {
-            background: rgba(18, 25, 45, 0.75);
-            backdrop-filter: blur(12px);
-            border-radius: 2.5rem;
-            border: 1px solid rgba(66, 153, 225, 0.25);
-            box-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(56, 189, 248, 0.1);
-            transition: transform 0.2s ease, box-shadow 0.3s ease;
+        .header {
+            text-align: center;
+            padding: 24px 20px 12px;
+            position: relative;
         }
-
-        .glass-card:hover {
-            box-shadow: 0 30px 55px -15px rgba(0, 160, 255, 0.2);
-            border-color: rgba(56, 189, 248, 0.5);
+        .header h1 {
+            font-size: 32px;
+            background: linear-gradient(90deg, #00d4ff, #7b68ee, #ff6b9d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 6px;
+            text-shadow: 0 0 30px rgba(0,212,255,0.3);
         }
-
-        .container {
-            max-width: 860px;
-            width: 100%;
+        .header::after {
+            content: '';
+            display: block;
+            width: 60%;
+            height: 2px;
+            margin: 12px auto 0;
+            background: linear-gradient(90deg, transparent, #00d4ff, #7b68ee, #ff6b9d, transparent);
+        }
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 16px;
+            padding: 16px 24px;
+            max-width: 1600px;
             margin: 0 auto;
         }
-
-        /* 主卡片区域 */
-        .main-card {
-            padding: 2rem 2rem 2.2rem 2rem;
-            margin-bottom: 1.8rem;
-        }
-
-        /* 头部标识 */
-        .badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            background: rgba(0, 110, 255, 0.2);
-            backdrop-filter: blur(2px);
-            padding: 0.35rem 1rem;
-            border-radius: 60px;
-            font-size: 0.8rem;
-            font-weight: 500;
-            letter-spacing: 0.3px;
-            border: 0.5px solid rgba(0, 160, 255, 0.4);
-            margin-bottom: 1.5rem;
-        }
-
-        .badge svg {
-            width: 18px;
-            height: 18px;
-            fill: none;
-            stroke: #3b82f6;
-            stroke-width: 2;
-        }
-
-        h1 {
-            font-size: 1.9rem;
-            font-weight: 600;
-            background: linear-gradient(135deg, #ffffff, #a0c2ff);
-            background-clip: text;
-            -webkit-background-clip: text;
-            color: transparent;
-            margin-bottom: 0.5rem;
-            letter-spacing: -0.3px;
-        }
-
-        .subhead {
-            color: #94a3b8;
-            font-size: 0.95rem;
-            margin-bottom: 2rem;
-            border-left: 3px solid #3b82f6;
-            padding-left: 0.8rem;
-        }
-
-        /* 备份代码展示区域 */
-        .code-block {
-            background: #0a0f1f;
-            border-radius: 1.8rem;
-            padding: 1rem 1.5rem;
-            margin: 1.8rem 0 1.5rem 0;
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            justify-content: space-between;
-            gap: 1rem;
-            border: 1px solid #1e2a44;
-            transition: all 0.2s;
-        }
-
-        .code-value {
-            font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
-            font-size: 2rem;
-            font-weight: 700;
-            letter-spacing: 2px;
-            color: #f0f9ff;
-            text-shadow: 0 0 5px rgba(59,130,246,0.3);
-            word-break: break-all;
-        }
-
-        .copy-btn {
-            background: linear-gradient(95deg, #1e2a44, #0f172a);
-            border: 1px solid #2d3a5e;
-            padding: 0.7rem 1.4rem;
-            border-radius: 2rem;
-            font-weight: 600;
-            font-size: 0.9rem;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            color: #cbd5e6;
-        }
-
-        .copy-btn:hover {
-            background: linear-gradient(95deg, #2d3a60, #1a253f);
-            border-color: #3b82f6;
-            color: white;
-            transform: scale(0.97);
-            box-shadow: 0 4px 12px rgba(59,130,246,0.3);
-        }
-
-        /* 信息格栅 */
-        .info-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-            gap: 1rem;
-            margin: 1.8rem 0;
-        }
-
-        .info-item {
-            background: rgba(0, 0, 0, 0.35);
-            border-radius: 1.2rem;
-            padding: 0.9rem 1rem;
-            border: 0.5px solid rgba(71, 125, 204, 0.3);
-        }
-
-        .info-label {
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            font-weight: 500;
-            color: #7e8aa8;
-            margin-bottom: 0.4rem;
-        }
-
-        .info-value {
-            font-size: 1rem;
-            font-weight: 500;
-            color: #e2e8ff;
-            word-break: break-word;
-        }
-
-        /* 验证区块 */
-        .verify-section {
-            background: rgba(8, 14, 26, 0.6);
-            border-radius: 1.5rem;
-            padding: 1.5rem;
-            margin-top: 0.8rem;
-            border: 1px solid #1e2f4a;
-        }
-
-        .section-title {
-            font-size: 1.2rem;
-            font-weight: 600;
-            margin-bottom: 0.3rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .section-desc {
-            font-size: 0.8rem;
-            color: #8b9ac2;
-            margin-bottom: 1.2rem;
-        }
-
-        .input-group {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-            align-items: center;
-            margin-bottom: 1.2rem;
-        }
-
-        .verify-input {
-            flex: 2;
-            background: #0b1120;
-            border: 1px solid #293856;
-            border-radius: 2rem;
-            padding: 0.8rem 1.2rem;
-            font-family: monospace;
-            font-size: 1rem;
-            color: #eef4ff;
-            outline: none;
-            transition: all 0.2s;
-        }
-
-        .verify-input:focus {
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 2px rgba(59,130,246,0.3);
-        }
-
-        .verify-btn {
-            background: #1e2b48;
-            border: none;
-            padding: 0.8rem 1.8rem;
-            border-radius: 2rem;
-            font-weight: 600;
-            color: white;
-            cursor: pointer;
-            transition: 0.2s;
-            font-size: 0.9rem;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .verify-btn:hover {
-            background: #2c3d64;
-            transform: translateY(-1px);
-        }
-
-        .message-area {
-            background: rgba(0, 0, 0, 0.4);
-            border-radius: 1rem;
-            padding: 0.75rem 1rem;
-            font-size: 0.85rem;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-top: 0.5rem;
-            border-left: 3px solid #3b82f6;
-        }
-
-        .success-msg {
-            border-left-color: #10b981;
-            color: #a7f3d0;
-        }
-
-        .error-msg {
-            border-left-color: #ef4444;
-            color: #fecaca;
-        }
-
-        .footer-note {
+        .stat-card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 20px 16px;
             text-align: center;
-            margin-top: 1.8rem;
-            font-size: 0.7rem;
-            color: #4b5a7c;
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s, box-shadow 0.3s;
         }
-
-        /* toast 通知 */
-        .toast-notify {
-            position: fixed;
-            bottom: 25px;
-            left: 50%;
-            transform: translateX(-50%) translateY(20px);
-            background: #0f212ecc;
-            backdrop-filter: blur(12px);
-            color: #b9e6ff;
-            padding: 10px 24px;
-            border-radius: 60px;
-            font-size: 0.85rem;
-            font-weight: 500;
-            z-index: 1000;
-            transition: all 0.2s ease;
-            opacity: 0;
-            pointer-events: none;
-            border: 1px solid #2c6e9e;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-            white-space: nowrap;
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 32px rgba(0,212,255,0.2);
         }
-
-        .toast-notify.show {
-            opacity: 1;
-            transform: translateX(-50%) translateY(0);
+        .stat-card .value {
+            font-size: 28px;
+            font-weight: bold;
+            background: linear-gradient(180deg, #00d4ff, #7b68ee);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
-
-        button {
-            background: none;
-            border: none;
-            cursor: pointer;
+        .stat-card .unit {
+            font-size: 14px;
+            color: #7b8ec2;
+            margin-left: 2px;
         }
-
-        @media (max-width: 560px) {
-            .main-card {
-                padding: 1.5rem;
-            }
-            .code-value {
-                font-size: 1.5rem;
-            }
-            .code-block {
-                flex-direction: column;
-                align-items: stretch;
-                text-align: center;
-            }
-            .copy-btn {
-                justify-content: center;
-            }
-            h1 {
-                font-size: 1.6rem;
-            }
+        .stat-card .label {
+            font-size: 13px;
+            color: #8892b0;
+            margin-top: 6px;
         }
+        .charts-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 16px;
+            padding: 8px 24px 16px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+        .chart-card {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+        }
+        .chart-card h3 {
+            font-size: 16px;
+            margin-bottom: 12px;
+            color: #a0b0ff;
+            padding-left: 10px;
+            border-left: 3px solid #7b68ee;
+        }
+        .chart-container {
+            width: 100%;
+            height: 320px;
+        }
+        .table-section {
+            padding: 8px 24px 32px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+        .table-card {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+        }
+        .table-card h3 {
+            font-size: 16px;
+            margin-bottom: 16px;
+            color: #a0b0ff;
+            padding-left: 10px;
+            border-left: 3px solid #7b68ee;
+        }
+        .novel-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        .novel-table thead th {
+            background: rgba(123,104,238,0.15);
+            padding: 10px 12px;
+            text-align: left;
+            color: #a0b0ff;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            position: sticky;
+            top: 0;
+        }
+        .novel-table tbody tr {
+            transition: background 0.2s;
+        }
+        .novel-table tbody tr:hover {
+            background: rgba(0,212,255,0.06);
+        }
+        .novel-table td {
+            padding: 9px 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+        .tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            margin: 1px 2px;
+            background: rgba(123,104,238,0.2);
+            color: #b8c4ff;
+        }
+        .status-done {
+            color: #91cc75;
+        }
+        .status-ongoing {
+            color: #fac858;
+        }
+        .table-scroll {
+            max-height: 420px;
+            overflow-y: auto;
+        }
+        .table-scroll::-webkit-scrollbar { width: 6px; }
+        .table-scroll::-webkit-scrollbar-track { background: transparent; }
+        .table-scroll::-webkit-scrollbar-thumb { background: rgba(123,104,238,0.3); border-radius: 3px; }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .stat-card, .chart-card, .table-card {
+            animation: fadeInUp 0.6s ease-out backwards;
+        }
+        .stat-card:nth-child(1) { animation-delay: 0.1s; }
+        .stat-card:nth-child(2) { animation-delay: 0.15s; }
+        .stat-card:nth-child(3) { animation-delay: 0.2s; }
+        .stat-card:nth-child(4) { animation-delay: 0.25s; }
+        .stat-card:nth-child(5) { animation-delay: 0.3s; }
+        .stat-card:nth-child(6) { animation-delay: 0.35s; }
     </style>
 </head>
 <body>
-<div class="container">
-    <!-- 主要展示卡片 -->
-    <div class="glass-card main-card">
-        <div class="badge">
-            <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" fill="none">
-                <path d="M9 12h6m-6 4h6m2-10H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V8a2 2 0 00-2-2z" />
-                <path d="M15 5v2a1 1 0 001 1h2" />
-            </svg>
-            <span>AUTODESK 安全备份门户</span>
-        </div>
-        <h1>恢复密钥库</h1>
-        <div class="subhead">授权备份代码 · 单次有效验证机制</div>
 
-        <!-- 核心备份代码展示区 -->
-        <div class="code-block">
-            <span class="code-value" id="backupCodeDisplay">ZC8Y-EMUJ</span>
-            <button class="copy-btn" id="copyCodeBtn">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                </svg>
-                复制代码
-            </button>
-        </div>
+<div class="header">
+    <h1>📊 小说数据可视化大屏</h1>
+</div>
 
-        <!-- 备份详情信息（模拟 autodesk 备份上下文） -->
-        <div class="info-grid">
-            <div class="info-item">
-                <div class="info-label">产品系列</div>
-                <div class="info-value">Autodesk 设计与制造套件</div>
-            </div>
-            <div class="info-item">
-                <div class="info-label">备份标识</div>
-                <div class="info-value">ZC8Y-EMUJ · 主恢复密钥</div>
-            </div>
-            <div class="info-item">
-                <div class="info-label">有效期状态</div>
-                <div class="info-value">✅ 永久有效 (离线验证)</div>
-            </div>
-            <div class="info-item">
-                <div class="info-label">生成指纹</div>
-                <div class="info-value">A0D3·9F2C·B7E1</div>
-            </div>
-        </div>
+<div class="stats-row" id="statsRow"></div>
 
-        <!-- 补充说明文字，增加可信度 -->
-        <div style="font-size: 0.75rem; color: #6f82b0; background: rgba(0,0,0,0.2); border-radius: 1rem; padding: 0.7rem; margin-top: 4px;">
-            🔐 此代码为 Autodesk 产品备份恢复专用凭证。请勿分享给未授权人员。通过下方验证器可校验代码有效性。
-        </div>
+<div class="charts-row">
+    <div class="chart-card">
+        <h3>分类分布</h3>
+        <div id="categoryChart" class="chart-container"></div>
     </div>
-
-    <!-- 验证区块 - 实用工具 -->
-    <div class="glass-card" style="padding: 1.5rem;">
-        <div class="section-title">
-            <span>🔎</span> 备份代码验证工具
-        </div>
-        <div class="section-desc">
-            输入您持有的 Autodesk 恢复代码，系统将自动匹配主备份密钥「ZC8Y-EMUJ」。
-        </div>
-        <div class="verify-section">
-            <div class="input-group">
-                <input type="text" class="verify-input" id="verifyCodeInput" placeholder="例如: ZC8Y-EMUJ 或 zc8y-emuj" autocomplete="off">
-                <button class="verify-btn" id="verifyBtn">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
-                    验证代码
-                </button>
-            </div>
-            <div id="verificationMessage" class="message-area">
-                <span>📋</span> 等待输入验证...
-            </div>
-            <div style="font-size: 0.7rem; margin-top: 0.7rem; color: #5e7196;">
-                * 验证不区分大小写，请保持格式(包含短横线)，确保与备份代码完全一致。
-            </div>
-        </div>
-        <!-- 额外提示：安全策略 -->
-        <div style="margin-top: 1rem; display: flex; gap: 10px; flex-wrap: wrap; justify-content: space-between; align-items: center;">
-            <div style="display: flex; gap: 12px;">
-                <span style="background: #0f172a; padding: 4px 10px; border-radius: 30px; font-size: 0.7rem;">✓ 离线校验</span>
-                <span style="background: #0f172a; padding: 4px 10px; border-radius: 30px; font-size: 0.7rem;">✓ 防篡改凭证</span>
-            </div>
-            <div style="font-size: 0.7rem; color: #5f7c9e;">
-                代码指纹: 7E·3A·ZC8Y
-            </div>
-        </div>
+    <div class="chart-card">
+        <h3>热门关键词</h3>
+        <div id="wordCloudChart" class="chart-container"></div>
     </div>
-
-    <div class="footer-note">
-        Autodesk 备份代码演示界面 | 基于安全备份代码 ZC8Y-EMUJ 构建 | 仅用于正版授权恢复情景
+    <div class="chart-card">
+        <h3>字数排行榜 TOP10</h3>
+        <div id="wordRankChart" class="chart-container"></div>
     </div>
 </div>
 
-<!-- Toast 通知组件 -->
-<div id="toastMsg" class="toast-notify">✅ 已复制备份代码</div>
+<div class="charts-row">
+    <div class="chart-card" style="grid-column: span 2;">
+        <h3>月度更新频率</h3>
+        <div id="updateChart" class="chart-container"></div>
+    </div>
+    <div class="chart-card">
+        <h3>连载状态占比</h3>
+        <div id="statusChart" class="chart-container"></div>
+    </div>
+</div>
+
+<div class="table-section">
+    <div class="table-card">
+        <h3>小说列表</h3>
+        <div class="table-scroll">
+            <table class="novel-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>书名</th>
+                        <th>作者</th>
+                        <th>分类</th>
+                        <th>字数</th>
+                        <th>状态</th>
+                        <th>标签</th>
+                        <th>更新时间</th>
+                    </tr>
+                </thead>
+                <tbody id="novelTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
 
 <script>
-    // 核心备份码 (来自提供的文件内容)
-    const MASTER_BACKUP_CODE = "ZC8Y-EMUJ";
+const DATA = {
+    "stats": {
+        "totalNovels": 50,
+        "totalAuthors": 35,
+        "totalCategories": 8,
+        "totalWords": 258600000,
+        "avgWords": 5172000,
+        "avgWordsPerAuthor": 7388571
+    },
+    "categories": [
+        {"name":"玄幻","value":12,"color":"#5470c6"},
+        {"name":"都市","value":10,"color":"#91cc75"},
+        {"name":"科幻","value":8,"color":"#fac858"},
+        {"name":"仙侠","value":7,"color":"#ee6666"},
+        {"name":"游戏","value":5,"color":"#73c0de"},
+        {"name":"历史","value":4,"color":"#3ba272"},
+        {"name":"悬疑","value":3,"color":"#fc8452"},
+        {"name":"轻小说","value":1,"color":"#9a60b4"}
+    ],
+    "wordCloud": [
+        {"name":"穿越","value":95},{"name":"系统","value":88},{"name":"修仙","value":82},
+        {"name":"都市","value":78},{"name":"玄幻","value":75},{"name":"热血","value":70},
+        {"name":"无敌","value":68},{"name":"搞笑","value":65},{"name":"校花","value":62},
+        {"name":"重生","value":58},{"name":"科幻","value":55},{"name":"异世","value":52},
+        {"name":"升级","value":50},{"name":"奇幻","value":48},{"name":"冒险","value":45},
+        {"name":"魔法","value":42},{"name":"战斗","value":40},{"name":"阴谋","value":38},
+        {"name":"逆袭","value":35},{"name":"天才","value":32},{"name":"废柴","value":30},
+        {"name":"养成","value":28},{"name":"种田","value":25},{"name":"末世","value":22},
+        {"name":"星际","value":20}
+    ],
+    "wordRank": [
+        {"name":"星河大帝","words":8920000},{"name":"完美世界","words":8540000},
+        {"name":"全职高手","words":7890000},{"name":"斗破苍穹","words":7650000},
+        {"name":"凡人修仙传","words":7450000},{"name":"遮天","words":7230000},
+        {"name":"盘龙","words":6980000},{"name":"武动乾坤","words":6850000},
+        {"name":"神墓","words":6540000},{"name":"雪中悍刀行","words":6320000}
+    ],
+    "updateFrequency": [
+        {"month":"1月","count":45},{"month":"2月","count":38},{"month":"3月","count":52},
+        {"month":"4月","count":48},{"month":"5月","count":61},{"month":"6月","count":55},
+        {"month":"7月","count":68},{"month":"8月","count":72},{"month":"9月","count":58},
+        {"month":"10月","count":63},{"month":"11月","count":57},{"month":"12月","count":49}
+    ],
+    "novels": [
+        {"id":1,"title":"星河大帝","author":"梦入神机","category":"玄幻","words":8920000,"status":"完结","tags":["穿越","系统","热血"],"updateTime":"2024-03-15"},
+        {"id":2,"title":"完美世界","author":"辰东","category":"玄幻","words":8540000,"status":"完结","tags":["修仙","热血","逆袭"],"updateTime":"2024-02-28"},
+        {"id":3,"title":"全职高手","author":"蝴蝶蓝","category":"游戏","words":7890000,"status":"完结","tags":["电竞","热血","团队"],"updateTime":"2024-01-20"},
+        {"id":4,"title":"斗破苍穹","author":"天蚕土豆","category":"玄幻","words":7650000,"status":"完结","tags":["穿越","修炼","热血"],"updateTime":"2023-12-10"},
+        {"id":5,"title":"凡人修仙传","author":"忘语","category":"仙侠","words":7450000,"status":"完结","tags":["修仙","成长","凡人流"],"updateTime":"2024-04-05"},
+        {"id":6,"title":"遮天","author":"辰东","category":"玄幻","words":7230000,"status":"完结","tags":["修仙","热血","冒险"],"updateTime":"2024-03-22"},
+        {"id":7,"title":"盘龙","author":"我吃西红柿","category":"玄幻","words":6980000,"status":"完结","tags":["穿越","魔法","热血"],"updateTime":"2024-02-15"},
+        {"id":8,"title":"武动乾坤","author":"天蚕土豆","category":"玄幻","words":6850000,"status":"完结","tags":["修炼","热血","逆袭"],"updateTime":"2024-01-08"},
+        {"id":9,"title":"神墓","author":"辰东","category":"玄幻","words":6540000,"status":"完结","tags":["穿越","热血","阴谋"],"updateTime":"2023-11-25"},
+        {"id":10,"title":"雪中悍刀行","author":"烽火戏诸侯","category":"武侠","words":6320000,"status":"完结","tags":["武侠","热血","权谋"],"updateTime":"2024-04-12"},
+        {"id":11,"title":"都市最强装逼系统","author":"南鹤","category":"都市","words":5890000,"status":"完结","tags":["系统","都市","搞笑"],"updateTime":"2024-03-01"},
+        {"id":12,"title":"三体","author":"刘慈欣","category":"科幻","words":5650000,"status":"完结","tags":["科幻","硬科幻","星际"],"updateTime":"2023-10-15"},
+        {"id":13,"title":"我欲封天","author":"耳根","category":"仙侠","words":5420000,"status":"完结","tags":["修仙","热血","成长"],"updateTime":"2024-02-20"},
+        {"id":14,"title":"一念永恒","author":"耳根","category":"仙侠","words":5180000,"status":"完结","tags":["修仙","搞笑","热血"],"updateTime":"2024-04-08"},
+        {"id":15,"title":"星辰变","author":"我吃西红柿","category":"玄幻","words":4980000,"status":"完结","tags":["穿越","修炼","热血"],"updateTime":"2023-12-28"},
+        {"id":16,"title":"校花的贴身高手","author":"鱼人二代","category":"都市","words":4750000,"status":"连载","tags":["都市","校花","保镖"],"updateTime":"2024-04-15"},
+        {"id":17,"title":"庆余年","author":"猫腻","category":"历史","words":4650000,"status":"完结","tags":["权谋","历史","穿越"],"updateTime":"2024-01-30"},
+        {"id":18,"title":"仙逆","author":"耳根","category":"仙侠","words":4520000,"status":"完结","tags":["修仙","逆袭","热血"],"updateTime":"2024-03-10"},
+        {"id":19,"title":"飞剑问道","author":"我吃西红柿","category":"仙侠","words":4380000,"status":"完结","tags":["修仙","神话","热血"],"updateTime":"2024-02-05"},
+        {"id":20,"title":"吞噬星空","author":"我吃西红柿","category":"科幻","words":4250000,"status":"完结","tags":["科幻","进化","热血"],"updateTime":"2024-04-01"},
+        {"id":21,"title":"宰执天下","author":"cuslaa","category":"历史","words":4120000,"status":"完结","tags":["穿越","历史","权谋"],"updateTime":"2023-11-12"},
+        {"id":22,"title":"重生之都市修仙","author":"十里剑神","category":"都市","words":3980000,"status":"完结","tags":["重生","修仙","都市"],"updateTime":"2024-03-25"},
+        {"id":23,"title":"琅琊榜","author":"海宴","category":"历史","words":3850000,"status":"完结","tags":["权谋","历史","复仇"],"updateTime":"2023-09-18"},
+        {"id":24,"title":"从前有座灵剑山","author":"国王陛下","category":"仙侠","words":3720000,"status":"完结","tags":["修仙","搞笑","热血"],"updateTime":"2024-01-15"},
+        {"id":25,"title":"全职法师","author":"乱","category":"玄幻","words":3580000,"status":"完结","tags":["魔法","热血","冒险"],"updateTime":"2024-04-10"},
+        {"id":26,"title":"惊悚乐园","author":"三天两觉","category":"游戏","words":3450000,"status":"完结","tags":["游戏","悬疑","搞笑"],"updateTime":"2024-02-28"},
+        {"id":27,"title":"末日蟑螂","author":"伟岸蟑螂","category":"科幻","words":3320000,"status":"完结","tags":["末世","生存","进化"],"updateTime":"2024-03-05"},
+        {"id":28,"title":"我师兄实在太稳健了","author":"言归正传","category":"仙侠","words":3180000,"status":"完结","tags":["修仙","搞笑","稳健"],"updateTime":"2024-04-12"},
+        {"id":29,"title":"全球高武","author":"老鹰吃小鸡","category":"都市","words":3050000,"status":"完结","tags":["系统","都市","热血"],"updateTime":"2024-01-22"},
+        {"id":30,"title":"烂柯棋缘","author":"真费事","category":"仙侠","words":2920000,"status":"完结","tags":["修仙","古典","神秘"],"updateTime":"2024-03-18"},
+        {"id":31,"title":"大奉打更人","author":"卖报小郎君","category":"仙侠","words":2780000,"status":"完结","tags":["穿越","探案","搞笑"],"updateTime":"2024-04-05"},
+        {"id":32,"title":"亏成首富从游戏开始","author":"青衫取醉","category":"游戏","words":2650000,"status":"完结","tags":["游戏","经营","搞笑"],"updateTime":"2024-02-10"},
+        {"id":33,"title":"夜的命名术","author":"会说话的肘子","category":"都市","words":2520000,"status":"连载","tags":["穿越","都市","热血"],"updateTime":"2024-04-15"},
+        {"id":34,"title":"道君","author":"跃千愁","category":"仙侠","words":2380000,"status":"完结","tags":["修仙","权谋","热血"],"updateTime":"2024-01-28"},
+        {"id":35,"title":"超神机械师","author":"齐佩甲","category":"游戏","words":2250000,"status":"完结","tags":["游戏","系统","科幻"],"updateTime":"2024-03-12"},
+        {"id":36,"title":"诡秘之主","author":"爱潜水的乌贼","category":"奇幻","words":2120000,"status":"完结","tags":["悬疑","奇幻","克苏鲁"],"updateTime":"2024-04-02"},
+        {"id":37,"title":"修真聊天群","author":"圣骑士的传说","category":"都市","words":1980000,"status":"完结","tags":["修仙","搞笑","都市"],"updateTime":"2024-02-18"},
+        {"id":38,"title":"轮回乐园","author":"那一只蚊子","category":"游戏","words":1850000,"status":"连载","tags":["无限流","热血","战斗"],"updateTime":"2024-04-14"},
+        {"id":39,"title":"九星毒奶","author":"育","category":"科幻","words":1720000,"status":"完结","tags":["科幻","搞笑","成长"],"updateTime":"2024-01-05"},
+        {"id":40,"title":"大江大河","author":"阿耐","category":"都市","words":1580000,"status":"完结","tags":["现实","都市","励志"],"updateTime":"2023-12-20"},
+        {"id":41,"title":"我有一座恐怖屋","author":"我会修空调","category":"悬疑","words":1450000,"status":"完结","tags":["恐怖","悬疑","经营"],"updateTime":"2024-03-28"},
+        {"id":42,"title":"长安十二时辰","author":"马伯庸","category":"悬疑","words":1320000,"status":"完结","tags":["悬疑","历史","推理"],"updateTime":"2024-02-25"},
+        {"id":43,"title":"上海堡垒","author":"江南","category":"科幻","words":1180000,"status":"完结","tags":["科幻","爱情","战争"],"updateTime":"2023-10-30"},
+        {"id":44,"title":"明克街13号","author":"纯洁滴小龙","category":"悬疑","words":1050000,"status":"连载","tags":["悬疑","都市","神秘"],"updateTime":"2024-04-13"},
+        {"id":45,"title":"神话版三国","author":"坟土荒草","category":"历史","words":920000,"status":"连载","tags":["穿越","历史","三国"],"updateTime":"2024-04-15"},
+        {"id":46,"title":"夜的钢琴曲","author":"默然","category":"轻小说","words":780000,"status":"完结","tags":["治愈","音乐","青春"],"updateTime":"2024-01-12"},
+        {"id":47,"title":"变成血族是什么体验","author":"神行汉堡","category":"都市","words":650000,"status":"连载","tags":["都市","异能","日常"],"updateTime":"2024-04-11"},
+        {"id":48,"title":"我真没想重生啊","author":"柳暗花又明","category":"都市","words":520000,"status":"完结","tags":["都市","重生","商战"],"updateTime":"2024-03-20"},
+        {"id":49,"title":"术师手册","author":"听日","category":"轻小说","words":380000,"status":"完结","tags":["异世界","冒险","魔法"],"updateTime":"2024-02-08"},
+        {"id":50,"title":"这只妖怪不想营业","author":"饮雪","category":"轻小说","words":250000,"status":"连载","tags":["妖怪","治愈","日常"],"updateTime":"2024-04-09"}
+    ]
+};
 
-    // DOM 元素
-    const copyBtn = document.getElementById('copyCodeBtn');
-    const codeSpan = document.getElementById('backupCodeDisplay');
-    const verifyInput = document.getElementById('verifyCodeInput');
-    const verifyBtn = document.getElementById('verifyBtn');
-    const messageDiv = document.getElementById('verificationMessage');
-    const toastEl = document.getElementById('toastMsg');
+function formatWords(n) {
+    if (n >= 10000) return (n / 10000).toFixed(0) + '万';
+    return n.toLocaleString();
+}
 
-    // 显示 Toast 通知
-    function showToast(message, isError = false) {
-        if (!toastEl) return;
-        toastEl.textContent = message || (isError ? "⚠️ 操作失败" : "✅ 复制成功");
-        // 增加错误样式区分（可选）
-        if (isError) {
-            toastEl.style.background = "#2a1a1fcc";
-            toastEl.style.borderColor = "#f97316";
-            toastEl.style.color = "#ffddc4";
-        } else {
-            toastEl.style.background = "#0f212ecc";
-            toastEl.style.borderColor = "#2c6e9e";
-            toastEl.style.color = "#b9e6ff";
-        }
-        toastEl.classList.add('show');
-        setTimeout(() => {
-            toastEl.classList.remove('show');
-            // 恢复默认样式
-            setTimeout(() => {
-                if (!isError) {
-                    toastEl.style.background = "#0f212ecc";
-                    toastEl.style.borderColor = "#2c6e9e";
-                    toastEl.style.color = "#b9e6ff";
-                }
-            }, 200);
-        }, 2000);
-    }
+const statsConfig = [
+    { key: 'totalNovels', label: '小说总数', unit: '部' },
+    { key: 'totalAuthors', label: '作者总数', unit: '位' },
+    { key: 'totalCategories', label: '分类总数', unit: '类' },
+    { key: 'totalWords', label: '总字数', unit: '', format: v => (v/100000000).toFixed(2) + '亿' },
+    { key: 'avgWords', label: '平均字数', unit: '', format: v => (v/10000).toFixed(0) + '万' },
+    { key: 'avgWordsPerAuthor', label: '人均字数', unit: '', format: v => (v/10000).toFixed(0) + '万' }
+];
+const statsRow = document.getElementById('statsRow');
+statsConfig.forEach(s => {
+    const val = s.format ? s.format(DATA.stats[s.key]) : DATA.stats[s.key];
+    statsRow.innerHTML += '<div class="stat-card"><div class="value">' + val + '<span class="unit">' + s.unit + '</span></div><div class="label">' + s.label + '</div></div>';
+});
 
-    // 复制功能 (现代 Clipboard API)
-    async function copyBackupCode() {
-        const code = MASTER_BACKUP_CODE;
-        try {
-            await navigator.clipboard.writeText(code);
-            showToast(`✅ 已复制代码：${code}`, false);
-            // 附加微震动感（可选，无伤大雅）
-            if (copyBtn) {
-                copyBtn.style.transform = "scale(0.96)";
-                setTimeout(() => { if(copyBtn) copyBtn.style.transform = ""; }, 150);
+const catChart = echarts.init(document.getElementById('categoryChart'));
+catChart.setOption({
+    tooltip: { trigger: 'item', formatter: '{b}: {c}部 ({d}%)' },
+    series: [{
+        type: 'pie',
+        radius: ['40%', '70%'],
+        itemStyle: { borderRadius: 6, borderColor: '#1a1f4e', borderWidth: 2 },
+        label: { color: '#a0b0ff', fontSize: 12 },
+        labelLine: { lineStyle: { color: '#556' } },
+        data: DATA.categories.map(c => ({ name: c.name, value: c.value, itemStyle: { color: c.color } }))
+    }]
+});
+
+const wcChart = echarts.init(document.getElementById('wordCloudChart'));
+wcChart.setOption({
+    tooltip: { show: true },
+    series: [{
+        type: 'wordCloud',
+        gridSize: 12,
+        sizeRange: [16, 50],
+        rotationRange: [-30, 30],
+        rotationStep: 15,
+        shape: 'circle',
+        textStyle: {
+            fontFamily: 'Microsoft YaHei',
+            fontWeight: 'bold',
+            color: function () {
+                const colors = ['#00d4ff','#7b68ee','#ff6b9d','#91cc75','#fac858','#73c0de','#fc8452','#ee6666'];
+                return colors[Math.floor(Math.random() * colors.length)];
             }
-        } catch (err) {
-            console.error('复制失败: ', err);
-            // fallback 方案
-            const textArea = document.createElement('textarea');
-            textArea.value = code;
-            document.body.appendChild(textArea);
-            textArea.select();
-            document.execCommand('copy');
-            document.body.removeChild(textArea);
-            showToast(`📋 已复制 (备用方式): ${code}`, false);
-        }
-    }
+        },
+        data: DATA.wordCloud.map(w => ({ name: w.name, value: w.value }))
+    }]
+});
 
-    // 验证逻辑：严格匹配大小写不敏感，但保持短横线格式
-    function validateBackupCode(inputCode) {
-        if (!inputCode || inputCode.trim() === "") {
-            return { valid: false, message: "请输入备份代码进行验证。" };
-        }
-        // 标准化：移除首尾空格，转大写进行比较
-        const normalizedInput = inputCode.trim().toUpperCase();
-        const normalizedMaster = MASTER_BACKUP_CODE.toUpperCase();
-        
-        if (normalizedInput === normalizedMaster) {
-            return { valid: true, message: "✅ 验证通过！备份代码匹配成功。该代码可用于 Autodesk 产品恢复及授权。" };
-        } else {
-            // 提供一些友好的错误提示，说明格式建议
-            if (!normalizedInput.includes('-')) {
-                return { valid: false, message: "❌ 代码无效：格式应为「XXXX-XXXX」类型 (例如 ZC8Y-EMUJ)。请检查短横线。" };
-            }
-            if (normalizedInput.length !== normalizedMaster.length) {
-                return { valid: false, message: "❌ 代码无效：长度不匹配。正确代码为 9 位字符（含短横线）。" };
-            }
-            return { valid: false, message: "❌ 验证失败：输入的代码与当前备份密钥不匹配。请重新检查并输入正确代码。" };
-        }
-    }
+const rankChart = echarts.init(document.getElementById('wordRankChart'));
+rankChart.setOption({
+    tooltip: { trigger: 'axis', formatter: function(p) { return p[0].name + '<br/>' + (p[0].value/10000).toFixed(0) + '万字'; } },
+    grid: { left: 100, right: 30, top: 10, bottom: 20 },
+    xAxis: { type: 'value', axisLabel: { color: '#7b8ec2', formatter: function(v) { return (v/10000)+'万'; } }, splitLine: { lineStyle: { color: 'rgba(255,255,255,0.05)' } } },
+    yAxis: { type: 'category', data: DATA.wordRank.map(w => w.name).reverse(), axisLabel: { color: '#a0b0ff' }, axisLine: { lineStyle: { color: '#334' } } },
+    series: [{
+        type: 'bar',
+        data: DATA.wordRank.map(w => w.words).reverse(),
+        itemStyle: {
+            borderRadius: [0, 4, 4, 0],
+            color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                { offset: 0, color: '#5470c6' },
+                { offset: 1, color: '#00d4ff' }
+            ])
+        },
+        barWidth: 16
+    }]
+});
 
-    // 处理验证并更新界面消息
-    function handleVerification() {
-        const rawInput = verifyInput.value;
-        const result = validateBackupCode(rawInput);
-        
-        // 更新 message 区域样式和文本
-        messageDiv.innerHTML = '';
-        // 清除已有样式类
-        messageDiv.classList.remove('success-msg', 'error-msg');
-        
-        const iconSpan = document.createElement('span');
-        const textSpan = document.createElement('span');
-        textSpan.style.flex = '1';
-        
-        if (result.valid) {
-            messageDiv.classList.add('success-msg');
-            iconSpan.innerHTML = '🔐 ';
-            textSpan.innerHTML = result.message;
-            // 附加成功动效：输入框短暂高亮
-            verifyInput.style.transition = "0.1s";
-            verifyInput.style.borderColor = "#10b981";
-            verifyInput.style.boxShadow = "0 0 0 2px rgba(16,185,129,0.3)";
-            setTimeout(() => {
-                verifyInput.style.borderColor = "#293856";
-                verifyInput.style.boxShadow = "";
-            }, 800);
-        } else {
-            messageDiv.classList.add('error-msg');
-            iconSpan.innerHTML = '⚠️ ';
-            textSpan.innerHTML = result.message;
-            verifyInput.style.borderColor = "#ef4444";
-            verifyInput.style.boxShadow = "0 0 0 2px rgba(239,68,68,0.2)";
-            setTimeout(() => {
-                verifyInput.style.borderColor = "#293856";
-                verifyInput.style.boxShadow = "";
-            }, 800);
+const upChart = echarts.init(document.getElementById('updateChart'));
+upChart.setOption({
+    tooltip: { trigger: 'axis' },
+    grid: { left: 50, right: 30, top: 20, bottom: 30 },
+    xAxis: { type: 'category', data: DATA.updateFrequency.map(m => m.month), axisLabel: { color: '#a0b0ff' }, axisLine: { lineStyle: { color: '#334' } } },
+    yAxis: { type: 'value', axisLabel: { color: '#7b8ec2' }, splitLine: { lineStyle: { color: 'rgba(255,255,255,0.05)' } } },
+    series: [{
+        type: 'line',
+        data: DATA.updateFrequency.map(m => m.count),
+        smooth: true,
+        symbol: 'circle',
+        symbolSize: 8,
+        lineStyle: { width: 3, color: '#00d4ff' },
+        itemStyle: { color: '#00d4ff', borderWidth: 2 },
+        areaStyle: {
+            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                { offset: 0, color: 'rgba(0,212,255,0.3)' },
+                { offset: 1, color: 'rgba(0,212,255,0.02)' }
+            ])
         }
-        messageDiv.appendChild(iconSpan);
-        messageDiv.appendChild(textSpan);
-        
-        // 附加振动 (可选不影响体验)
-        if (!result.valid && verifyInput) {
-            verifyInput.style.transform = "translateX(2px)";
-            setTimeout(() => { if(verifyInput) verifyInput.style.transform = ""; }, 100);
-            setTimeout(() => { if(verifyInput) verifyInput.style.transform = ""; }, 200);
-        }
-    }
+    }]
+});
 
-    // 支持回车键验证
-    function onInputKeyPress(e) {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            handleVerification();
-        }
-    }
+const done = DATA.novels.filter(n => n.status === '完结').length;
+const ongoing = DATA.novels.filter(n => n.status === '连载').length;
+const stChart = echarts.init(document.getElementById('statusChart'));
+stChart.setOption({
+    tooltip: { trigger: 'item', formatter: '{b}: {c}部 ({d}%)' },
+    series: [{
+        type: 'pie',
+        radius: ['45%', '70%'],
+        itemStyle: { borderRadius: 6, borderColor: '#1a1f4e', borderWidth: 2 },
+        label: { color: '#a0b0ff' },
+        data: [
+            { name: '完结', value: done, itemStyle: { color: '#91cc75' } },
+            { name: '连载', value: ongoing, itemStyle: { color: '#fac858' } }
+        ]
+    }]
+});
 
-    // 初始化事件绑定
-    function init() {
-        if (copyBtn) {
-            copyBtn.addEventListener('click', copyBackupCode);
-        }
-        if (verifyBtn) {
-            verifyBtn.addEventListener('click', handleVerification);
-        }
-        if (verifyInput) {
-            verifyInput.addEventListener('keypress', onInputKeyPress);
-        }
-        
-        // 预置输入框示例提示（仅显示 placeholder 足够）
-        // 附加安全：双击代码区域同样复制（提升体验）
-        if (codeSpan) {
-            codeSpan.style.cursor = 'pointer';
-            codeSpan.addEventListener('dblclick', () => {
-                copyBackupCode();
-            });
-            codeSpan.title = '双击复制代码';
-        }
-        
-        // 验证模块初始化时显示默认等待消息，但不覆盖原有内容
-        if (messageDiv && messageDiv.innerHTML.trim() === '') {
-            messageDiv.innerHTML = '<span>📋</span> 等待输入验证...';
-            messageDiv.classList.remove('success-msg', 'error-msg');
-        }
-        
-        // 额外增加一个动态信息：展示当前唯一主码的元数据（确保一致性）
-        console.log("Autodesk 备份代码门户已加载，主密钥: " + MASTER_BACKUP_CODE);
-    }
-    
-    // 调用初始化
-    init();
+const tbody = document.getElementById('novelTableBody');
+DATA.novels.forEach(n => {
+    const statusClass = n.status === '完结' ? 'status-done' : 'status-ongoing';
+    const tags = n.tags.map(t => '<span class="tag">' + t + '</span>').join('');
+    tbody.innerHTML += '<tr><td>' + n.id + '</td><td style="color:#00d4ff;font-weight:500">' + n.title + '</td><td>' + n.author + '</td><td>' + n.category + '</td><td>' + formatWords(n.words) + '</td><td class="' + statusClass + '">' + n.status + '</td><td>' + tags + '</td><td>' + n.updateTime + '</td></tr>';
+});
+
+window.addEventListener('resize', function() {
+    [catChart, wcChart, rankChart, upChart, stChart].forEach(function(c) { c.resize(); });
+});
 </script>
 </body>
 </html>
